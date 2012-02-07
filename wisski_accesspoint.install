@@ -1,0 +1,70 @@
+<?php
+// $ID$
+/*
+*@author Martin Scholz, unless otherwise said
+*/
+
+/**
+* @author Martin Scholz
+*/
+function wisski_accesspoint_schema () {
+
+  $schemas = array();
+
+  $schemas['wisski_accesspoint'] = array(
+    'fields' => array(
+      'aid' => array(
+        'type' => 'serial',
+        'size' => 'normal',
+        'not null' => TRUE,
+      ),
+      'name' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+      ),
+      'type' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+      ),
+      'module' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+      ),
+      'settings' => array(
+        'type' => 'text',
+        'size' => 'normal',
+        'not null' => TRUE,
+      ),
+    ),
+    'primary key' => array('aid'),
+  );
+
+  return $schemas;
+
+}
+
+
+/**
+* @author Martin Scholz
+*/
+function wisski_accesspoint_install () {
+  drupal_install_schema('wisski_accesspoint');
+  
+  // the local is always present and singleton!
+  // write it into the table at start
+  // NOTE: drupal_write_record does not work in hook_install!
+  // use db_query instead
+
+  db_query("INSERT INTO {wisski_accesspoint} (`name`, `type`, `module`, `settings`) VALUES ('%s', 'local', 'wisski_accesspoint', '%s')", t('Local'), serialize(NULL));
+
+}
+
+/**
+* @author Martin Scholz
+*/
+function wisski_accesspoint_uninstall () {
+  drupal_uninstall_schema('wisski_accesspoint');
+}

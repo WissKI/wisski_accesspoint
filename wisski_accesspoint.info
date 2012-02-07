@@ -1,0 +1,7 @@
+; $Id$
+name = WissKI Access Point
+description = Provides a common interface for accessing different types of triple stores
+core = 6.x
+package = "WissKI"
+dependencies[] = wisski_store
+dependencies[] = wisski

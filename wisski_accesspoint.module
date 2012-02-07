@@ -1,0 +1,217 @@
+<?php
+// $Id$
+
+
+/* Provide sparql endpoints that can be used as authority vocabularies
+* This module provides a hook system with hook_wisski_accesspoint so that you
+* can declare your own types of accesspoints
+*/
+
+
+/**
+* @author Martin Scholz
+*/
+function wisski_accesspoint_perm () {
+  return array('wisski administrate accesspoint');
+}
+
+
+/**
+* @author Martin Scholz
+*/
+function wisski_accesspoint_menu () {
+  
+  // menu entries for administrating accesspoints
+  $items = array();
+  $items['admin/settings/wisski/accesspoint'] = array(
+      'title' => 'Access Points',
+      'type' => MENU_LOCAL_TASK,
+      'page callback' => 'wisski_accesspoint_admin_list',
+      'page arguments' => array(),
+      'access arguments' => array('wisski administrate accesspoint'),
+      'file' => 'wisski_accesspoint.admin.inc',
+      );
+  $items['admin/settings/wisski/accesspoint/list'] = array(
+      'title' => 'List',
+      'type' => MENU_DEFAULT_LOCAL_TASK,
+      'page callback' => 'wisski_accesspoint_admin_list',
+      'page arguments' => array(),
+      'access arguments' => array('wisski administrate accesspoint'),
+      'file' => 'wisski_accesspoint.admin.inc',
+      );
+  $items['admin/settings/wisski/accesspoint/add'] = array(
+      'title' => 'Add',
+      'type' => MENU_LOCAL_TASK,
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('wisski_accesspoint_admin_add'),
+      'access arguments' => array('wisski administrate accesspoint'),
+      'file' => 'wisski_accesspoint.admin.inc',
+      );
+  foreach (wisski_accesspoint_get_types() as $type => $info) {
+    if ($type == 'local') continue;
+    $items['admin/settings/wisski/accesspoint/add/' . $type] = array(
+        'title' => 'Add ' . $info['name'],
+        'type' => MENU_LOCAL_TASK,
+        'page callback' => 'drupal_get_form',
+        'page arguments' => array('wisski_accesspoint_admin_edit', NULL, $type),
+        'access arguments' => array('wisski administrate accesspoint'),
+        'file' => 'wisski_accesspoint.admin.inc',
+        );
+  }
+  $items['admin/settings/wisski/accesspoint/%/edit'] = array(
+      'title' => 'Edit',
+      'type' => MENU_CALLBACK,
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('wisski_accesspoint_admin_edit', 4),
+      'access arguments' => array('wisski administrate accesspoint'),
+      'file' => 'wisski_accesspoint.admin.inc',
+      );
+  $items['admin/settings/wisski/accesspoint/%/delete'] = array(
+      'title' => 'Delete',
+      'type' => MENU_CALLBACK,
+      'page callback' => 'wisski_accesspoint_admin_delete',
+      'page arguments' => array(4),
+      'access arguments' => array('wisski administrate accesspoint'),
+      'file' => 'wisski_accesspoint.admin.inc',
+      );
+  $items['wisski/accesspoint/js/edit'] = array(
+      'type' => MENU_CALLBACK,
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('wisski_accesspoint_admin_edit_js', 3),
+      'access arguments' => array('wisski administrate accesspoint'),
+      'file' => 'wisski_accesspoint.admin.inc',
+      );
+  return $items;
+
+}
+
+
+/* Lists accesspoint types and type information
+* Type information currently contains the id/type name and the defining module.
+*
+* @return depends on the arguments:
+* - $type is set and $col is set:
+*   value of information keyed under $col for type $type
+* - $type is set and $col is NULL
+*   key-value array of type information for type $type
+* - $type is NULL
+*   array of the form
+*   <type name> => array('module' => <defining module>, 'id' => <type name>)
+*
+* @author Martin Scholz
+*
+*/
+function wisski_accesspoint_get_types($type = NULL, $col = NULL) {
+  include_once('wisski_accesspoint.inc');
+  return _wisski_accesspoint_get_types($type, $col);
+}
+
+/* Get one (or multiple) accesspoint object(s).
+*
+* An accesspoint object currently contains the keys:
+* - aid: the accesspoint id
+* - name: the ap name
+* - type: the type
+* - module: the module defining the type and responsible for handling this ap
+* - settings: type-specific settings (see hook_wisski_accesspoint)
+* - endpoint: the ARC2 endpoint object
+* - url: the url for the accesspoint
+*
+* $refresh will delete cached data. Use when you have saved an ap beforehand.
+*
+* @return depends on arguments:
+* - $aid is set and $col is set
+*   value of the key $col for accesspoint with id $aid
+* - $aid is set and $col is NULL
+*   ap object for ap with id $aid
+* - $aid is NULL
+*   an array with all defined accesspoints of the form
+*   <aid> => <ap object>
+*
+* @author Martin Scholz
+*
+*/
+function wisski_accesspoint_get($aid = NULL, $col = NULL, $refresh = FALSE) {
+  include_once('wisski_accesspoint.inc');
+  return _wisski_accesspoint_get($aid, $col, $refresh);
+}
+
+/* Store the data of an ap object to the DB.
+*
+* NOTE: The argument $ap may be changed, ie. upon insertion, an id may be added
+* to the object.
+*
+* @author Martin Scholz
+*
+*/
+function wisski_accesspoint_save(&$ap) {
+  include_once('wisski_accesspoint.inc');
+  return _wisski_accesspoint_save($ap);
+}
+
+/* Delete an ap from the DB.
+*
+* @author Martin Scholz
+*
+*/
+function wisski_accesspoint_delete($aid) {
+  module_invoke_all('wisski_accesspoint', 'delete', $aid);
+  db_query('DELETE FROM {wisski_accesspoint} WHERE aid = %d', $aid);
+  return TRUE;
+}
+
+/**Hook hook_wisski_accesspoint($op, $ap = NULL, $args...)
+* Modules may provide own vocabulary types by implementing this hook.
+* $op may be 
+* <dl>
+* <li><dt>types</dt><dd>return an array of all vocab types this module provides.</dd></li>
+* <li><dt>endpoint</dt><dd>return an instance of an ARC2 store that can be used to access the vocabulary data. </dd></li>
+* <li><dt>edit</dt><dd>return a form array part that will be inserted into the add/edit form (in fieldset Endpoint Settings) for the vocabulary for custom settings. All elements' names should be prefixed with <type> + '_' to avoid clashes.</dd></li>
+* <li><dt>validate</dt><dd>validate routine for edit. use form_set_error for error reporting. return void</dd></li>
+* <li><dt>submit</dt><dd>submit routine for edit. form_state may be altered (e.g. redirect) and passed as return value. return array(<new endpoint settings>, <form_state>).</dd></li>
+* </dl>
+* 
+* Arguments depend on the operation:
+* <ul>
+* <li>for all but 'types', $type and $settings will be specified. For 'edit', 'validate', and 'submit', $settings holds the endpoint settings before the editing.</li>
+* <li>for all but 'types', $settings is the settings data structure of the vocabulary.</li>
+* <li>for 'validate' and 'submit', $form and $form_state are given. Both represent the arrays of the full form, not only the endpoint fieldset.</li>
+* <ul>
+*
+* @author Martin Scholz
+*
+*/
+function wisski_accesspoint_wisski_accesspoint($op, $ap = NULL) {
+
+  if ($op == 'types') {
+
+    return array(
+        'wisski' => array(
+          'name' => t('Inter-WissKI'),
+          'description' => t('Access the data of another WissKI instance'),
+          ),
+        'local' => array(
+          'name' => t('Local'),
+          'description' => t('The local data. This is a singleton.'),
+          ),
+        'endpoint' => array(
+          'name' => t('SparQL Endpoint'),
+          'description' => t('Access a SparQL conformant endpoint')
+          ),
+        );
+
+  } else {
+
+    include_once('wisski_accesspoint.inc');
+    
+    if (function_exists('wisski_accesspoint_wisski_accesspoint_' . $ap->type)) {
+      return call_user_func('wisski_accesspoint_wisski_accesspoint_' . $ap->type, $op, $ap);
+    } else {
+      return NULL;
+    }
+
+  }
+
+}
+
+

@@ -1,0 +1,75 @@
+<?php
+// $Id$
+
+/*
+*@author Martin Scholz, unless otherwise said
+*/
+
+/**
+* @author Martin Scholz
+*/
+function wisski_ap_store_perm () {
+  return array('wisski manage vocabulary stores');
+}
+
+
+/**
+* @author Martin Scholz
+*/
+function wisski_ap_store_menu () {
+  
+  $items = array();
+  $items['admin/settings/wisski/accesspoint/%/import'] = array(
+    'title callback' => 'wisski_ap_store_title',
+    'title arguments' => array('Import @store', 5),
+    'type' => MENU_CALLBACK,
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('wisski_ap_store_admin_import', 4),
+    'access arguments' => array('wisski administrate accesspoint'),
+    'file' => 'wisski_ap_store.inc',
+  );
+  $items['admin/settings/wisski/accesspoint/%/reset'] = array(
+    'title callback' => 'wisski_ap_store_title',
+    'title arguments' => array('Reset @store', 5),
+    'type' => MENU_CALLBACK,
+    'page callback' => 'wisski_ap_store_empty',
+    'page arguments' => array(4),
+    'access arguments' => array('wisski administrate accesspoint'),
+    'file' => 'wisski_ap_store.inc',
+  );
+  $items['wisski/ap_store/%/endpoint'] = array(
+    'type' => MENU_CALLBACK,
+    'page callback' => 'wisski_ap_store_endpoint',
+    'page arguments' => array(2),
+    'access arguments' => array('wisski administrate accesspoint'),
+    'file' => 'wisski_ap_store.inc',
+  );
+
+  return $items;
+  
+}
+
+
+/* Callback for page title
+*
+* @author Martin Scholz
+* 
+*/
+function wisski_ap_store_title ($title, $aid) {
+  $ap = wisski_accesspoint_get($aid);
+  return t($title, array('@store' => $ap->name));
+}
+
+
+/* Implementation of hook_wisski_accesspoint
+*
+* @author Martin Scholz
+* 
+*/
+function wisski_ap_store_wisski_accesspoint($op, $ap = NULL) {
+  include_once('wisski_ap_store.inc');
+  return _wisski_ap_store_wisski_accesspoint($op, $ap);
+}
+
+
+
