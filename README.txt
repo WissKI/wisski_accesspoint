@@ -25,3 +25,11 @@ provide a key for access-restricted WissKI stores (see module wisski_endpoint).
 data pool. After init, you may import triple data. This type is only present if
 module wisski_ap_store is enabled.
 
+
+License
+=============================
+
+(c) WissKI Project, http://wiss-ki.eu
+
+This software is licensed under the same terms as Drupal (GNU GPLv2 or later).
+You should have recieved a copy of the license as LICENSE.txt.
