@@ -143,6 +143,7 @@ function wisski_accesspoint_wisski_accesspoint_wisski($op, $ap) {
       // set up arc config
       $cfg = array(
           'remote_store_endpoint' => wisski_accesspoint_wisski_accesspoint_wisski('url', $ap),
+          'remote_store_timeout' => $ap->settings['timeout'],
           );
 
       return ARC2::getRemoteStore($cfg);
@@ -167,6 +168,7 @@ function wisski_accesspoint_wisski_accesspoint_wisski($op, $ap) {
         $ap->settings = array(
             'url' => '',
             'read_key' => '',
+            'timeout' => 30,
             );
       }
       $fieldset = array();
@@ -182,11 +184,20 @@ function wisski_accesspoint_wisski_accesspoint_wisski($op, $ap) {
           '#title' => t('Read key'),
           '#default_value' => $ap->settings['read_key'],
           );
+      $fieldset['type_settings_timeout'] = array(
+          '#type' => 'textfield',
+          '#title' => t('Connection Timeout'),
+          '#default_value' => $ap->settings['timeout'],
+          '#description' => t('in seconds; 0 sets standard timeout (usually 30 secs)'),
+          );
 
       return $fieldset;
 
     case 'validate':
 
+      if (! preg_match('/^[0-9]+$/', $ap->type_settings_timeout)) {
+        form_set_error('type_settings_timeout', t('Only numeric values allowed in timeout.'));
+      }
       return;
 
     case 'submit':
@@ -195,6 +206,7 @@ function wisski_accesspoint_wisski_accesspoint_wisski($op, $ap) {
           array(
             'url' => $ap->type_settings_url,
             'read_key' => $ap->type_settings_read_key,
+            'timeout' => $ap['type_settings_timeout'],
             ),
           NULL
           );
@@ -237,6 +249,7 @@ function wisski_accesspoint_wisski_accesspoint_endpoint($op, $ap) {
       // set up arc config
       $cfg = array(
           'remote_store_endpoint' => wisski_accesspoint_wisski_accesspoint_endpoint('url', $ap),
+          'remote_store_timeout' => $ap->settings['timeout'],
           );
 
       return ARC2::getRemoteStore($cfg);
@@ -254,6 +267,7 @@ function wisski_accesspoint_wisski_accesspoint_endpoint($op, $ap) {
         $ap->settings = array(
             'url' => '',
             'query' => array(),
+            'timeout' => 30,
             );
       }
 
@@ -280,6 +294,13 @@ function wisski_accesspoint_wisski_accesspoint_endpoint($op, $ap) {
           '#title' => t('Add new key'),
           '#description' => t('The value field will appear after saving.'),
           );
+      $fieldset['type_settings_timeout'] = array(
+          '#type' => 'textfield',
+          '#title' => t('Connection Timeout'),
+          '#default_value' => $ap->settings['timeout'],
+          '#description' => t('in seconds; 0 sets standard timeout (usually 30 secs)'),
+          );
+
 
       return $fieldset;
 
@@ -290,13 +311,16 @@ function wisski_accesspoint_wisski_accesspoint_endpoint($op, $ap) {
         if (isset($ap->$new_key))
           form_set_error('type_settings_query_new_key', t('Key exists already'));
       }
+      if (! preg_match('/^[0-9]+$/', $ap->type_settings_timeout)) {
+        form_set_error('type_settings_timeout', t('Only numeric values allowed in timeout.'));
+      }
 
       return;
 
     case 'submit':
 
       $ap = (array) $ap;
-      $settings = array('url' => $ap['type_settings_url'], 'query' => array());
+      $settings = array('url' => $ap['type_settings_url'], 'query' => array(), 'timeout' => $ap['type_settings_timeout']);
       // get all query parameters
       foreach ($ap as $k => $v) {
         if (strpos($k, 'type_settings_query_key_') === 0) {
