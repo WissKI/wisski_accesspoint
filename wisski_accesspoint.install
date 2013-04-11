@@ -58,7 +58,7 @@ function wisski_accesspoint_install () {
   // NOTE: drupal_write_record does not work in hook_install!
   // use db_query instead
 
-  db_query("INSERT INTO {wisski_accesspoint} (`name`, `type`, `module`, `settings`) VALUES ('%s', 'local', 'wisski_accesspoint', '%s')", t('Local'), serialize(NULL));
+  db_query("INSERT INTO {wisski_accesspoint} ("name", "type", "module", "settings") VALUES ('%s', 'local', 'wisski_accesspoint', '%s')", t('Local'), serialize(NULL));
 
 }
 

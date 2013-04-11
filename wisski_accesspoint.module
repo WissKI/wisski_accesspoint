@@ -156,7 +156,7 @@ function wisski_accesspoint_save(&$ap) {
 */
 function wisski_accesspoint_delete($aid) {
   module_invoke_all('wisski_accesspoint', 'delete', $aid);
-  db_query('DELETE FROM {wisski_accesspoint} WHERE aid = %d', $aid);
+  db_query("DELETE FROM {wisski_accesspoint} WHERE \"aid\" = %d", $aid);
   return TRUE;
 }
 
