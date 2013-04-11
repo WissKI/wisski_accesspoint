@@ -205,7 +205,7 @@ function wisski_accesspoint_admin_edit_validate($form, &$form_state) {
   $ap = (object) $form_state['values'];
   
   // name should be unique => check if name already exists
-  $res = db_query("SELECT * FROM {wisski_accesspoint} WHERE \"name\" = '%s'", $ap->name);
+  $res = db_query("SELECT * FROM {wisski_accesspoint} WHERE name = '%s'", $ap->name);
   $other_ap = db_fetch_object($res);
   if ($other_ap && $other_ap->aid != $ap->aid) {
     form_set_error('name', 'There already exists an accesspoint with that name. Please choose a different one.');
