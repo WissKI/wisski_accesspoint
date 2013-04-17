@@ -14,13 +14,14 @@ function _wisski_accesspoint_get($aid, $col, $reload) {
     $aps = array();
     $all = FALSE;
   }
-  
+
   if (!$all && (!$aid || !isset($aps[$aid]))) {
     $rows = db_query('SELECT * FROM {wisski_accesspoint}' . ((!$aid) ? '' : " WHERE aid = %d"), $aid);
-    while (TRUE) {//($ap = db_fetch_object($rows)) {
+    while ($ap = db_fetch_object($rows)) {
       $ap = db_fetch_object($rows);
       if (!$ap) break;
       $ap->settings = unserialize($ap->settings);
+      
       $ap->endpoint = module_invoke($ap->module, 'wisski_accesspoint', 'endpoint', $ap);
       $ap->url = module_invoke($ap->module, 'wisski_accesspoint', 'url', $ap);
       $aps[$ap->aid] = $ap;

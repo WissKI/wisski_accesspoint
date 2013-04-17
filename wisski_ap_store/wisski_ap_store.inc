@@ -44,8 +44,18 @@ function _wisski_ap_store_wisski_accesspoint($op, $ap) {
       // triple store
       // the store name will be prefixed  with the name of the standard store
       // and contain the aid so that there should be no name clash
-      drupal_load('module', 'wisski_store');
-      $cfg = wisski_store_getObj()->config;
+      #drupal_load('module', 'wisski_store');
+      #$cfg = wisski_store_getObj()->config;
+      #if (!$cfg["db_name"]) {
+        global $db_url;
+        $db_conn = parse_url($db_url);
+        $cfg = array(
+          'db_name' => urldecode(variable_get('wisski_database', substr($db_conn['path'], 1))),
+          'db_host' => urldecode($db_conn['host']),
+          'db_user' => urldecode($db_conn['user']),
+          'db_pwd' => urldecode($db_conn['pass']),
+        );
+      #}
       $cfg['store_name'] .= '_wisski_ap_store_' . $ap->aid;
       $store = ARC2::getStore($cfg);
       if (!$store->isSetUp()) $store->setUp();
