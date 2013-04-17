@@ -18,8 +18,6 @@ function _wisski_accesspoint_get($aid, $col, $reload) {
   if (!$all && (!$aid || !isset($aps[$aid]))) {
     $rows = db_query('SELECT * FROM {wisski_accesspoint}' . ((!$aid) ? '' : " WHERE aid = %d"), $aid);
     while ($ap = db_fetch_object($rows)) {
-      $ap = db_fetch_object($rows);
-      if (!$ap) break;
       $ap->settings = unserialize($ap->settings);
       
       $ap->endpoint = module_invoke($ap->module, 'wisski_accesspoint', 'endpoint', $ap);
